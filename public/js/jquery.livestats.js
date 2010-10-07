@@ -8,7 +8,7 @@ function liveStatsClient (argument) {
 		self.setupBayeuxHandlers();
 	};
 	this.setupBayeuxHandlers = function() {
-		self.client = new Faye.Client('http://localhost/faye', {
+		self.client = new Faye.Client('http://localhost:8000/faye', {
 			timeout: 120
 		});
 		self.client.subscribe('/stat', function(message) {
