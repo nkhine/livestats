@@ -5,9 +5,8 @@ process.addListener('uncoughtException', function(err, stack) {
 	console.log('Exception ' + err);
 	console.log(err.stack);
 	console.log('------------------');
-};
-	
-	);
+})
+
 var LiveStats = require('./lib/livestats');
 
 new LiveStats({
