@@ -1,13 +1,13 @@
+require.paths.unshift(__dirname + "/vendor");
+
 var http = require('http'),
-	sys = require('sys');
+	sys = require('sys'),
+	nodeStatic = require('node-static/lib/node-static');
 	
+var file = new(nodeStatic.Server)('./public', {cache: false});	
 var server = http.createServer(function(request, response) {
 	request.addListener('end', function() {
-		response.writeHead(200, {
-			'Content-Type': 'text/plain'
-			});
-		response.write(sys.inspect(request));
-		response.end();
-	};)
+		file.serve(request, response);
+	})
 })
-server.listen(8000);
+server.listen(8124);
