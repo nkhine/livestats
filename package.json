@@ -1,0 +1,16 @@
+{
+  "author": "Geoffrey Grosenbach <boss@topfunky.com> (http://peepcode.com)",
+  "name": "livestats",
+  "description": "A real-time hit tracker.",
+  "version": "0.1.0",
+  "homepage": "http://peepcode.com/products/nodejs-i",
+  "engines": {
+    "node": "~0.6.9"
+  },
+  "dependencies": {
+    "faye": "0.7.1",
+    "node-static": "0.5.9"
+  },
+  "devDependencies": {},
+  "optionalDependencies": {}
+}

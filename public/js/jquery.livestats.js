@@ -1,148 +1,144 @@
 
-function liveStatsClient (argument) {
-	if (! (this instanceof arguments.callee)) {
-		return new arguments.callee(arguments);
-	}
-	
-	this.init = function() {
-		var self = this;
-		self.drawMap();
-		self.viewDidResize();
-		self.setupBayeuxHandlers();
-	};
-	
-	this.setupBayeuxHandlers = function() {
-		var self = this;
-		
-		$.getJSON("/config.json", function (config) {
-			self.client = new Faye.Client("http://" + window.location.hostname + ':' + config.port + '/faye', {
-				timeout: 120
-			});
+function LiveStatsClient() {
+  if (! (this instanceof arguments.callee)) {
+    return new arguments.callee(arguments);
+  }
 
-			self.client.subscribe('/stat', function (message) {
-				// console.log("MESSAGE", message);
-				self.drawMarker(message);
-			});
-		});
-	};
-	
-	this.viewDidResize = function () {
-	  var self = this,
-	    width = $('body').width(),
-	    windowHeight = $(window).height(),
-	    mapCanvasHeight = width * (369.0 / 567.0);
-	  self.map.setSize(width, mapCanvasHeight);
-	  $('#map').css({
-	    'margin-top': (windowHeight - mapCanvasHeight) / 2.0
-	  });
-	}
+  var self = this;
 
-	this.drawMap = function () {
-	  var self = this;
-	  self.map = Raphael('map', 0, 0);
-	  self.map.canvas.setAttribute('viewBox', '0 0 567 369');
+  this.init = function() {
+    self.drawMap();
+    self.viewDidResize();
+    self.setupBayeuxHandlers();
+  };
+  
+  this.setupBayeuxHandlers = function() {
+    $.getJSON("/config.json", function (config) {
+      self.client = new Faye.Client("http://" + window.location.hostname + ':' + config.port + '/faye', {
+        timeout: 120
+      });
 
-	  self.map.path(mapPath).attr({
-	    stroke: 'black',
-	    fill: '#222'
-	  }).attr({
-	    'stroke-width': 0.7
-	  });
-	}
+      self.client.subscribe('/stat', function (message) {
+        // console.log("MESSAGE", message);
+        self.drawMarker(message);
+      });
+    });
+  };
 
-	this.geoCoordsToMapCoords = function (latitude, longitude) {
-	  latitude = parseFloat(latitude);
-	  longitude = parseFloat(longitude);
+  this.viewDidResize = function () {
+    var width = $('body').width(),
+        windowHeight = $(window).height(),
+        mapCanvasHeight = width * (369.0 / 567.0);
+        
+    self.map.setSize(width, mapCanvasHeight);
+    $('#map').css({
+      'margin-top': (windowHeight - mapCanvasHeight) / 2.0
+    });
+  }
 
-	  var mapWidth = 567,
-	    mapHeight = 369,
-	    x, y, mapOffsetX, mapOffsetY;
+  this.drawMap = function () {
+    self.map = Raphael('map', 0, 0);
+    self.map.canvas.setAttribute('viewBox', '0 0 567 369');
 
-	  x = (mapWidth * (180 + longitude) / 360) % mapWidth;
+    self.map.path(mapPath).attr({
+      stroke: 'black',
+      fill: '#222'
+    }).attr({
+      'stroke-width': 0.7
+    });
+  }
 
-	  latitude = latitude * Math.PI / 180;
-	  y = Math.log(Math.tan((latitude / 2) + (Math.PI / 4)));
-	  y = (mapHeight / 2) - (mapWidth * y / (2 * Math.PI));
+  this.geoCoordsToMapCoords = function (latitude, longitude) {
+    latitude = parseFloat(latitude);
+    longitude = parseFloat(longitude);
 
-	  mapOffsetX = mapWidth * 0.026;
-	  mapOffsetY = mapHeight * 0.141;
+    var mapWidth = 567,
+      mapHeight = 369,
+      x, y, mapOffsetX, mapOffsetY;
 
-	  return {
-	    x: (x - mapOffsetX) * 0.97,
-	    y: (y + mapOffsetY + 15),
-	    xRaw: x,
-	    yRaw: y
-	  };
-	}
+    x = (mapWidth * (180 + longitude) / 360) % mapWidth;
 
-	this.drawMarker = function (message) {
-	  var self = this,
-	    latitude = message.latitude,
-	    longitude = message.longitude,
-	    text = message.title,
-	    city = message.city,
-	    x, y;
+    latitude = latitude * Math.PI / 180;
+    y = Math.log(Math.tan((latitude / 2) + (Math.PI / 4)));
+    y = (mapHeight / 2) - (mapWidth * y / (2 * Math.PI));
 
-	  var mapCoords = this.geoCoordsToMapCoords(latitude, longitude);
-	  x = mapCoords.x;
-	  y = mapCoords.y;
+    mapOffsetX = mapWidth * 0.026;
+    mapOffsetY = mapHeight * 0.141;
 
-	  var person = self.map.path(personPath);
-	  person.scale(0.01, 0.01);
-	  person.translate(-255, -255); // Reset location to 0,0
-	  person.translate(x, y);
-	  person.attr({
-	    fill: '#ff9',
-	    stroke: 'transparent'
-	  });
+    return {
+      x: (x - mapOffsetX) * 0.97,
+      y: (y + mapOffsetY + 15),
+      xRaw: x,
+      yRaw: y
+    };
+  }
 
-	  var title = self.map.text(x, y + 11, text);
-	  title.attr({
-	    fill: 'white',
-	    "font-size": 10,
-	    "font-family": "'Helvetica Neue', 'Helvetica', sans-serif",
-	    'font-weight': 'bold'
-	  });
-	  var subtitle = self.map.text(x, y + 21, city);
-	  subtitle.attr({
-	    fill: '#999',
-	    "font-size": 7,
-	    "font-family": "'Helvetica Neue', 'Helvetica', sans-serif"
-	  });
+  this.drawMarker = function (message) {
+    var latitude = message.latitude,
+        longitude = message.longitude,
+        text = message.title,
+        city = message.city,
+        x, y;
 
-	  var hoverFunc = function () {
-	    person.attr({
-	      fill: 'white'
-	    });
-	    $(title.node).fadeIn('fast');
-	    $(subtitle.node).fadeIn('fast');
-	  };
-	  var hideFunc = function () {
-	    person.attr({
-	      fill: '#ff9'
-	    });
-	    $(title.node).fadeOut('slow');
-	    $(subtitle.node).fadeOut('slow');
-	  };
-	  $(person.node).hover(hoverFunc, hideFunc);
+    var mapCoords = this.geoCoordsToMapCoords(latitude, longitude);
+    x = mapCoords.x;
+    y = mapCoords.y;
 
-	  person.animate({
-	    scale: '0.02, 0.02'
-	  }, 2000, 'elastic', function () {
-	    $(title.node).fadeOut(5000);
-	    $(subtitle.node).fadeOut(5000);
-	  });
-	}
-	
-	this.init();
-}
+    var person = self.map.path(personPath);
+    person.scale(0.01, 0.01);
+    person.translate(-255, -255); // Reset location to 0,0
+    person.translate(x, y);
+    person.attr({
+      fill: '#ff9',
+      stroke: 'transparent'
+    });
+
+    var title = self.map.text(x, y + 11, text);
+    title.attr({
+      fill: 'white',
+      "font-size": 10,
+      "font-family": "'Helvetica Neue', 'Helvetica', sans-serif",
+      'font-weight': 'bold'
+    });
+    var subtitle = self.map.text(x, y + 21, city);
+    subtitle.attr({
+      fill: '#999',
+      "font-size": 7,
+      "font-family": "'Helvetica Neue', 'Helvetica', sans-serif"
+    });
+
+    var hoverFunc = function () {
+      person.attr({
+        fill: 'white'
+      });
+      $(title.node).fadeIn('fast');
+      $(subtitle.node).fadeIn('fast');
+    };
+    var hideFunc = function () {
+      person.attr({
+        fill: '#ff9'
+      });
+      $(title.node).fadeOut('slow');
+      $(subtitle.node).fadeOut('slow');
+    };
+    $(person.node).hover(hoverFunc, hideFunc);
+
+    person.animate({
+      scale: '0.02, 0.02'
+    }, 2000, 'elastic', function () {
+      $(title.node).fadeOut(5000);
+      $(subtitle.node).fadeOut(5000);
+    });
+  }
+  
+  this.init();
+};
 
 var liveStatsClient;
-
 jQuery(function() {
-	liveStatsClient = new liveStatsClient();
-	
-	$(window).resize(function() {
-		liveStatsClient.viewDidResize();
-	});
+  liveStatsClient = new LiveStatsClient();
+  
+  $(window).resize(function() {
+    liveStatsClient.viewDidResize();
+  });
 });
