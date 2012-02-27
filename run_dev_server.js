@@ -8,7 +8,7 @@
 
 var child_process = require('child_process');
 var fs = require("fs");
-var sys = require("sys");
+var sys = require("util");
 
 dev_server = {
 
