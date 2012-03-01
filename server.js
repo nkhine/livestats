@@ -8,5 +8,5 @@ process.addListener('uncaughtException', function (err, stack) {
 var LiveStats = require('./lib/livestats');
 
 new LiveStats({
-  port: 80,
+  port: 8000,
 });
