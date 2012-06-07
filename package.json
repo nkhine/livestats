@@ -10,7 +10,6 @@
   "dependencies": {
     "faye": "0.8.0",
     "node-static": "0.5.9",
-    "riak-js": "latest",
     "geoip": "git://github.com/toots/GeoIP.git"
   },
   "devDependencies": {},
